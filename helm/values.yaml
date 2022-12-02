@@ -8,8 +8,9 @@ fullnameOverride: ""
 
 images:
   owgw:
-    repository: tip-tip-wlan-cloud-ucentral.jfrog.io/owgw
-    tag: master
+    #repository: tip-tip-wlan-cloud-ucentral.jfrog.io/owgw
+    repository: 588354938798.dkr.ecr.ap-south-1.amazonaws.com/owgw
+    tag: latest
     pullPolicy: Always
 #    regcred:
 #      registry: tip-tip-wlan-cloud-ucentral.jfrog.io
