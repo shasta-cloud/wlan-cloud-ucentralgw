@@ -90,6 +90,13 @@ namespace OpenWifi::RESTAPI_RPC {
 			}
 
 			auto ResultFields = rpc_answer->get(uCentralProtocol::RESULT).extract<Poco::JSON::Object::Ptr>();
+
+                        //Logic to Log the received message from AP.
+               		std::ostringstream      rpcss;
+               		ResultFields->stringify(rpcss);
+               		nlohmann::json D = nlohmann::json::parse(rpcss.str());
+               		Logger.information(fmt::format("Response Received from AP :{} ",rpcss.str() ));
+			
 			if (!ResultFields->has(uCentralProtocol::STATUS) || !ResultFields->isObject(uCentralProtocol::STATUS)) {
 				Cmd.executionTime = rpc_execution_time.count();
 				if(Cmd.Command=="ping") {
