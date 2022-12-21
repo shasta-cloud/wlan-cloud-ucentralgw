@@ -75,6 +75,7 @@ namespace OpenWifi {
 		{"edgecore_spw2ac1200","SWITCH"},
 		{"edgecore_spw2ac1200-lan-poe","SWITCH"},
 		{"edgecore_ssw2ac2600","SWITCH"},
+		{"edgecore_as4630_54pe","SWITCH"},
 		{"hfcl_ion4","AP"},
 		{"indio_um-305ac","AP"},
 		{"linksys_e8450-ubi","AP"},
