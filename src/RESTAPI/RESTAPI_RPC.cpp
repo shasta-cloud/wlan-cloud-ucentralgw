@@ -91,7 +91,7 @@ namespace OpenWifi::RESTAPI_RPC {
 
 			auto ResultFields = rpc_answer->get(uCentralProtocol::RESULT).extract<Poco::JSON::Object::Ptr>();
 
-                        //Logic to Log the received message from AP.
+                        //Logic to print the received message as info Logs from AP.
                		std::ostringstream      rpcss;
                		ResultFields->stringify(rpcss);
                		nlohmann::json D = nlohmann::json::parse(rpcss.str());
