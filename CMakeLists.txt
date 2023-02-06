@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 project(owgw VERSION 2.8.0)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_BUILD_TYPE Debug)
+#set(CMAKE_BUILD_TYPE Debug) //Uncomment to create debug build
 
 if(UNIX AND APPLE)
     set(OPENSSL_ROOT_DIR /usr/local/opt/openssl)
