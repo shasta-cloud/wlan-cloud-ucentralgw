@@ -423,6 +423,18 @@ namespace OpenWifi {
 				Process_venuebroadcast(ParamsObj);
 			} break;
 
+			case uCentralProtocol::Events::ET_EVENT: {
+				Process_event(ParamsObj);
+			} break;
+
+			case uCentralProtocol::Events::ET_ALARM: {
+				Process_alarm(ParamsObj);
+			} break;
+
+			case uCentralProtocol::Events::ET_WIFISCAN: {
+				Process_wifiscan(ParamsObj);
+			} break;
+
 			// 	this will never be called but some compilers will complain if we do not have a case for
 			//	every single values of an enum
 			case uCentralProtocol::Events::ET_UNKNOWN: {
@@ -432,7 +444,7 @@ namespace OpenWifi {
 		}
 	}
 
-	bool AP_WS_Connection::StartTelemetry(uint64_t RPCID) {
+	bool AP_WS_Connection::StartTelemetry(uint64_t RPCID, const std::vector<std::string> & TelemetryTypes) {
 		poco_information(Logger_, fmt::format("TELEMETRY({}): Starting.", CId_));
 		Poco::JSON::Object StartMessage;
 		StartMessage.set("jsonrpc", "2.0");
@@ -441,6 +453,14 @@ namespace OpenWifi {
 		Params.set("serial", SerialNumber_);
 		Params.set("interval", (uint64_t)TelemetryInterval_);
 		Poco::JSON::Array Types;
+		if(TelemetryTypes.empty()) {
+			Types.add("wifi-frames");
+			Types.add("dhcp-snooping");
+			Types.add("state");
+		} else {
+			for(const auto &type:TelemetryTypes)
+			Types.add(type);
+		}
 		Types.add("wifi-frames");
 		Types.add("dhcp-snooping");
 		Types.add("state");
@@ -477,7 +497,7 @@ namespace OpenWifi {
 	}
 
 	bool AP_WS_Connection::SetWebSocketTelemetryReporting(uint64_t RPCID, uint64_t Interval,
-														  uint64_t LifeTime) {
+														  uint64_t LifeTime, const std::vector<std::string> & TelemetryTypes) {
 		std::unique_lock Lock(TelemetryMutex_);
 		TelemetryWebSocketRefCount_++;
 		TelemetryInterval_ = TelemetryInterval_ ? ( Interval< TelemetryInterval_ ? Interval : TelemetryInterval_) : Interval;
@@ -486,12 +506,12 @@ namespace OpenWifi {
 		UpdateCounts();
 		if (!TelemetryReporting_) {
 			TelemetryReporting_ = true;
-			return StartTelemetry(RPCID);
+			return StartTelemetry(RPCID, TelemetryTypes);
 		}
 		return true;
 	}
 
-	bool AP_WS_Connection::SetKafkaTelemetryReporting(uint64_t RPCID, uint64_t Interval, uint64_t LifeTime) {
+	bool AP_WS_Connection::SetKafkaTelemetryReporting(uint64_t RPCID, uint64_t Interval, uint64_t LifeTime, const std::vector<std::string> & TelemetryTypes) {
 		std::unique_lock Lock(TelemetryMutex_);
 		TelemetryKafkaRefCount_++;
 		TelemetryInterval_ = TelemetryInterval_ ? ( Interval<TelemetryInterval_ ? Interval : TelemetryInterval_) : Interval;
@@ -500,7 +520,7 @@ namespace OpenWifi {
 		UpdateCounts();
 		if (!TelemetryReporting_) {
 			TelemetryReporting_ = true;
-			return StartTelemetry(RPCID);
+			return StartTelemetry(RPCID, TelemetryTypes);
 		}
 		return true;
 	}

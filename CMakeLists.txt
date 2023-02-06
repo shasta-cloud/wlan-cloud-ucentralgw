@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 project(owgw VERSION 2.8.0)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_BUILD_TYPE Debug)
 
 if(UNIX AND APPLE)
     set(OPENSSL_ROOT_DIR /usr/local/opt/openssl)
@@ -199,7 +200,7 @@ add_executable( owgw
         src/AP_WS_Process_telemetry.cpp
         src/AP_WS_Process_venuebroadcast.cpp
         src/RADSEC_server.h
-        src/UI_GW_WebSocketNotifications.cpp src/UI_GW_WebSocketNotifications.h src/framework/RESTAPI_SystemConfiguration.h src/AP_restrictions.h src/ScriptManager.cpp src/ScriptManager.h src/RESTAPI/RESTAPI_scripts_handler.cpp src/RESTAPI/RESTAPI_scripts_handler.h src/RESTAPI/RESTAPI_script_handler.cpp src/RESTAPI/RESTAPI_script_handler.h src/storage/storage_scripts.cpp src/storage/storage_scripts.h src/SignatureMgr.cpp src/SignatureMgr.h)
+        src/UI_GW_WebSocketNotifications.cpp src/UI_GW_WebSocketNotifications.h src/framework/RESTAPI_SystemConfiguration.h src/AP_restrictions.h src/ScriptManager.cpp src/ScriptManager.h src/RESTAPI/RESTAPI_scripts_handler.cpp src/RESTAPI/RESTAPI_scripts_handler.h src/RESTAPI/RESTAPI_script_handler.cpp src/RESTAPI/RESTAPI_script_handler.h src/storage/storage_scripts.cpp src/storage/storage_scripts.h src/SignatureMgr.cpp src/SignatureMgr.h src/AP_WS_Process_event.cpp src/AP_WS_Process_wifiscan.cpp src/AP_WS_Process_alarm.cpp)
 
 if(NOT SMALL_BUILD)
 
