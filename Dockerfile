@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     make cmake g++ git \
     libpq-dev libmariadb-dev libmariadbclient-dev-compat \
     librdkafka-dev libboost-all-dev libssl-dev \
-    zlib1g-dev nlohmann-json3-dev ca-certificates libfmt-dev gdb
+    zlib1g-dev nlohmann-json3-dev ca-certificates libfmt-dev
 
 FROM build-base AS poco-build
 
@@ -87,7 +87,7 @@ RUN mkdir -p "$OWGW_ROOT" "$OWGW_CONFIG" && \
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
     librdkafka++1 gosu gettext ca-certificates bash jq curl wget \
-    libmariadb-dev-compat libpq5 unixodbc postgresql-client libfmt7 sqlite3 gdb
+    libmariadb-dev-compat libpq5 unixodbc postgresql-client libfmt7 sqlite3
 
 COPY readiness_check /readiness_check
 COPY test_scripts/curl/cli /cli
