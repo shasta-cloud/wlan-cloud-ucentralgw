@@ -293,7 +293,7 @@ storage.type = sqlite
 ```asm
 openwifi.autoprovisioning = true
 openwifi.devicetypes.0 = AP:linksys_ea8300,edgecore_eap101,linksys_e8450-ubi
-openwifi.devicetypes.1 = SWITCH:edgecore_ecs4100-12ph
+openwifi.devicetypes.1 = SWITCH:edgecore_ecs4100-12ph,edgecore_as4630-54pe
 openwifi.devicetypes.2 = IOT:esp32
 ```
 
