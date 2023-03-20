@@ -68,6 +68,9 @@ namespace OpenWifi::GWObjects {
 		std::string DevicePassword;
 		std::string subscriber;
 		std::string entity;
+		std::string FWDownloadUUID;
+		std::string FWInstallUUID;
+		bool FWUpgradeInprogress = 0;;
 		uint64_t 	modified=0;
 		std::string locale;
 		bool 		restrictedDevice=false;
@@ -152,6 +155,7 @@ namespace OpenWifi::GWObjects {
 		std::string Results;
 		std::string Details;
 		std::string ErrorText;
+                std::string UpgradeType;
 		uint64_t Submitted = time(nullptr);
 		uint64_t Executed = 0;
 		uint64_t Completed = 0 ;

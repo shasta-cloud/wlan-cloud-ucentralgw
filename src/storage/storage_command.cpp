@@ -133,7 +133,13 @@ typedef Poco::Tuple<
 		try {
 			auto Now = Utils::Now();
 
-			Command.Status = to_string(Type);
+			if (Command.Command == uCentralProtocol::UPGRADE &&
+			    Type == CommandExecutionType::COMMAND_EXECUTING) {
+			    Command.Status = Command.UpgradeType;
+                        } else {
+                            Command.Status = to_string(Type);
+                        }
+
 			if(	Type==CommandExecutionType::COMMAND_COMPLETED	||
 				Type==CommandExecutionType::COMMAND_TIMEDOUT	||
 				Type==CommandExecutionType::COMMAND_FAILED		||
