@@ -29,7 +29,6 @@
 #include "framework/UI_WebSocketClientServer.h"
 #include "UI_GW_WebSocketNotifications.h"
 #include "ScriptManager.h"
-#include "AP_restrictions.h"
 #include "SignatureMgr.h"
 
 namespace OpenWifi {
@@ -75,7 +74,6 @@ namespace OpenWifi {
 		{"edgecore_spw2ac1200","SWITCH"},
 		{"edgecore_spw2ac1200-lan-poe","SWITCH"},
 		{"edgecore_ssw2ac2600","SWITCH"},
-		{"edgecore_as4630_54pe","SWITCH"},
 		{"hfcl_ion4","AP"},
 		{"indio_um-305ac","AP"},
 		{"linksys_e8450-ubi","AP"},
@@ -91,7 +89,8 @@ namespace OpenWifi {
 		{"tplink_ex227","AP"},
 		{"tplink_ex228","AP"},
 		{"tplink_ex447","AP"},
-		{"wallys_dr40x9","AP"}
+		{"wallys_dr40x9","AP"},
+		{"x86_64-accton_as4630_54pe-r0","SWITCH"}
 	};
 	
 	void Daemon::PostInitialization([[maybe_unused]] Poco::Util::Application &self) {

@@ -8,7 +8,6 @@ fullnameOverride: ""
 
 images:
   owgw:
-    #repository: tip-tip-wlan-cloud-ucentral.jfrog.io/owgw
     repository: 588354938798.dkr.ecr.ap-south-1.amazonaws.com/owgw
     tag: latest
     pullPolicy: Always
@@ -229,8 +228,9 @@ configProperties:
   # Auto provisioning
   openwifi.autoprovisioning: "true"
   openwifi.devicetypes.0: AP:linksys_ea8300,edgecore_eap101,linksys_e8450-ubi
-  openwifi.devicetypes.1: SWITCH:edgecore_ecs4100-12ph
+  openwifi.devicetypes.1: SWITCH:edgecore_ecs4100-12ph,edgecore_as4630-54pe
   openwifi.devicetypes.2: IOT:esp32
+  openwifi.certificates.allowmismatch: "false"
   oui.download.uri: https://standards-oui.ieee.org/oui/oui.txt
   firmware.autoupdate.policy.default: auto
   iptocountry.provider: ipinfo
