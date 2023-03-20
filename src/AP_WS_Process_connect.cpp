@@ -18,6 +18,21 @@
 
 namespace OpenWifi {
 
+               static void SendKafkaFirmwareUpdate(const std::string &SerialNumber, const std::string &OldFirmware, const std::string &NewFirmware) {
+               if(KafkaManager()->Enabled()) {
+                       Poco::JSON::Object EventDetails;
+                       EventDetails.set("oldFirmware", OldFirmware);
+                       EventDetails.set("newFirmware",NewFirmware);
+                       Poco::JSON::Object      Event;
+                       Event.set("type","device.firmware_change");
+                       Event.set("timestamp", Utils::Now());
+                       Event.set("details", EventDetails);
+                       std::ostringstream OS;
+                       Event.stringify(OS);
+                       KafkaManager()->PostMessage(KafkaTopics::CONNECTION, SerialNumber, OS.str());
+               }
+       }
+
 	void AP_WS_Connection::Process_connect(Poco::JSON::Object::Ptr ParamsObj, const std::string &Serial) {
 		if (ParamsObj->has(uCentralProtocol::UUID) &&
 			ParamsObj->has(uCentralProtocol::FIRMWARE) &&
@@ -66,6 +81,7 @@ namespace OpenWifi {
 				int Updated{0};
 				if(!Firmware.empty()) {
 					if(Firmware!=DeviceInfo.Firmware) {
+                                                SendKafkaFirmwareUpdate(SerialNumber_, DeviceInfo.Firmware, Firmware);
 						DeviceInfo.Firmware = Firmware;
 						DeviceInfo.LastFWUpdate = Utils::Now();
 						++Updated;
