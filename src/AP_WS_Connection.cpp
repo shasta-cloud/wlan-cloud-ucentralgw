@@ -313,7 +313,6 @@ namespace OpenWifi {
 	void AP_WS_Connection::ProcessJSONRPCEvent(Poco::JSON::Object::Ptr &Doc) {
 		auto Method = Doc->get(uCentralProtocol::METHOD).toString();
 		auto EventType = uCentralProtocol::Events::EventFromString(Method);
-		poco_debug(Logger_,fmt::format("karthick received event {}",EventType));
 		if (EventType == uCentralProtocol::Events::ET_UNKNOWN) {
 			poco_warning(Logger_,fmt::format("ILLEGAL-PROTOCOL({}): Unknown message type '{}'", CId_, Method));
 			Errors_++;
@@ -425,7 +424,6 @@ namespace OpenWifi {
 			} break;
 
                        case uCentralProtocol::Events::ET_EVENT: {
-			       poco_information(Logger_, fmt::format("karthick in process event "));
                                Process_event(ParamsObj);
                        } break;
 
