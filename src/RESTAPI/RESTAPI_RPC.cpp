@@ -138,23 +138,17 @@ namespace OpenWifi::RESTAPI_RPC {
 			}
 
 			//	Add the completed command to the database...
-			GWObjects::Device       DeviceInfo;
-			StorageService()->GetDevice(Cmd.SerialNumber,DeviceInfo);
-			Logger.information( fmt::format("karthick we reached for command success cmd.Command {}  DeviceInfo.devicetype {}"
-						,Cmd.Command,DeviceInfo.DeviceType));
-			if ( (Daemon()->IdentifyDevice(DeviceInfo.DeviceType) == "SWITCH") &&
-			     (Cmd.Command ==  uCentralProtocol::UPGRADE) )
-			{
-                            Logger.information( fmt::format("karthick in if COMMAND_EXECUTED"));
-			    DeviceInfo.FWUpgradeInprogress = true;
-			    DeviceInfo.FWDownloadUUID = MicroServiceCreateUUID();
-			    DeviceInfo.FWInstallUUID  = MicroServiceCreateUUID();
-			    StorageService()->UpdateDevice(DeviceInfo);
-			    StorageService()->AddCommand(Cmd.SerialNumber, Cmd, Storage::CommandExecutionType::COMMAND_EXECUTED);
-                        } else {
-			    Logger.information( fmt::format("karthick in if COMMAND_COMPLETED"));
-			    StorageService()->AddCommand(Cmd.SerialNumber, Cmd, Storage::CommandExecutionType::COMMAND_COMPLETED);
-                        }
+            GWObjects::Device       DeviceInfo;
+            StorageService()->GetDevice(Cmd.SerialNumber,DeviceInfo);
+            if ( (Daemon()->IdentifyDevice(DeviceInfo.DeviceType) == "SWITCH") &&
+                 (Cmd.Command ==  uCentralProtocol::UPGRADE) )
+            {
+                //In case of upgrade set to execution, once we get the event message for firmware update the command list
+                StorageService()->AddCommand(Cmd.SerialNumber, Cmd, Storage::CommandExecutionType::COMMAND_EXECUTED);
+            } else {
+                StorageService()->AddCommand(Cmd.SerialNumber, Cmd, Storage::CommandExecutionType::COMMAND_COMPLETED);
+            }
+
 			if (ObjectToReturn && Handler) {
 				Handler->ReturnObject(*ObjectToReturn);
 			} else {

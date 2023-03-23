@@ -133,12 +133,7 @@ typedef Poco::Tuple<
 		try {
 			auto Now = Utils::Now();
 
-			if (Command.Command == uCentralProtocol::UPGRADE &&
-			    Type == CommandExecutionType::COMMAND_EXECUTING) {
-			    Command.Status = Command.UpgradeType;
-                        } else {
-                            Command.Status = to_string(Type);
-                        }
+            Command.Status = to_string(Type);
 
 			if(	Type==CommandExecutionType::COMMAND_COMPLETED	||
 				Type==CommandExecutionType::COMMAND_TIMEDOUT	||
@@ -792,6 +787,42 @@ typedef Poco::Tuple<
 			Logger().log(E);
 		}
 		return false;
+	}
+
+	bool Storage::UpdateLastCommandStatus(GWObjects::CommandDetails &Command, GWObjects::CommandDetails &RCommand)
+	{
+	    try {
+	    Poco::Data::Session Sess = Pool_->get();
+	    Poco::Data::Statement Select(Sess);
+	    Poco::Data::Statement Update(Sess);
+
+	    std::string St{"SELECT " +
+				DB_Command_SelectFields +
+				" FROM CommandList WHERE serialnumber=? and command=? ORDER BY executed DESC LIMIT 1"};
+		CommandDetailsRecordTuple R;
+		Select << ConvertParams(St),
+				Poco::Data::Keywords::into(R),
+				Poco::Data::Keywords::use(Command.SerialNumber),
+				Poco::Data::Keywords::use(Command.Command);
+		Select.execute();
+		ConvertCommandRecord(R,RCommand);
+
+	    if (!RCommand.UUID.empty()) {
+	            std::string St{"UPDATE CommandList set status=? WHERE UUID=?"};
+		        Update << ConvertParams(St),
+				Poco::Data::Keywords::use(Command.Status),
+				Poco::Data::Keywords::use(RCommand.UUID);
+		        Update.execute();
+	    } else {
+		        return false;
+        }
+
+		return true;
+		} catch (const Poco::Exception &E) {
+			Logger().log(E);
+		}
+		return false;
+
 	}
 
 }
