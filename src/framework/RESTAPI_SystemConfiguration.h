@@ -28,8 +28,25 @@ namespace OpenWifi {
 		inline void DoPost() final {}
 
 		inline void DoGet() final {
+            auto entries = GetParameter("entries","");
+            if(entries.empty()) {
+                return BadRequest(RESTAPI::Errors::MissingOrInvalidParameters);
+            }
 
-			return OK();
+            auto entriesArray = Poco::StringTokenizer(entries,",",Poco::StringTokenizer::TOK_TRIM);
+            Poco::JSON::Array   Array;
+            for(const auto &entry:entriesArray) {
+                SecurityObjects::ExtraSystemConfiguration   X;
+                X.parameterName = entry;
+                X.parameterValue = MicroServiceConfigGetString(entry,"");
+                Poco::JSON::Object  E;
+                X.to_json(E);
+                Array.add(E);
+            }
+
+            std::ostringstream  os;
+            Array.stringify(os);
+			return ReturnRawJSON(os.str());
 		}
 
 		inline void DoPut() final{
@@ -37,15 +54,14 @@ namespace OpenWifi {
 				return UnAuthorized(RESTAPI::Errors::ACCESS_DENIED);
 			}
 
-			return OK();
+			return BadRequest(RESTAPI::Errors::NotImplemented);
 		};
 
 		inline void DoDelete() final{
 			if(UserInfo_.userinfo.userRole!=SecurityObjects::ROOT) {
 				return UnAuthorized(RESTAPI::Errors::ACCESS_DENIED);
 			}
-			MicroServiceDeleteOverrideConfiguration();
-			return OK();
+            return BadRequest(RESTAPI::Errors::NotImplemented);
 		};
 	};
 

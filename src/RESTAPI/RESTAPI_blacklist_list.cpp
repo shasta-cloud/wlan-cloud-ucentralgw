@@ -10,24 +10,16 @@
 namespace OpenWifi {
 	void RESTAPI_blacklist_list::DoGet() {
 
-		std::vector<GWObjects::BlackListedDevice>	Devices;
+		poco_debug(Logger(), fmt::format("BLACKLIST-GET: Device serial number list"));
 
-		poco_debug(Logger(),fmt::format("BLACKLIST-GET: Device serial number list"));
+		std::vector<GWObjects::BlackListedDevice> Devices;
 
-		Poco::JSON::Array	Arr;
-		Poco::JSON::Object	Answer;
-
-		if(QB_.CountOnly) {
+		if (QB_.CountOnly) {
 			auto Count = StorageService()->GetBlackListDeviceCount();
 			return ReturnCountOnly(Count);
-		} else if(StorageService()->GetBlackListDevices(QB_.Offset, QB_.Limit, Devices)) {
-			for(const auto &i:Devices) {
-				Poco::JSON::Object O;
-				i.to_json(O);
-				Arr.add(O);
-			}
+		} else if (StorageService()->GetBlackListDevices(QB_.Offset, QB_.Limit, Devices)) {
+			return Object("devices", Devices);
 		}
-		Answer.set("devices", Arr);
-		return ReturnObject(Answer);
+		NotFound();
 	}
-}
+} // namespace OpenWifi

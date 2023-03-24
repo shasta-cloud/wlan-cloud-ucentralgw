@@ -49,6 +49,38 @@ components:
         - IOT
         - MESH
 
+    DeviceRestrictionsKeyInfo:
+      type: object
+      properties:
+        vendor:
+          type: string
+        algo:
+          type: string
+
+    DeviceRestrictions:
+      type: object
+      properties:
+        dfs:
+          type: boolean
+        ssh:
+          type: boolean
+        rtty:
+          type: boolean
+        tty:
+          type: boolean
+        developer:
+          type: boolean
+        upgrade:
+          type: boolean
+        commands:
+          type: boolean
+        country:
+          type: array
+          items:
+            type: string
+        key_info:
+          $ref: '#/components/schemas/DeviceRestrictionsKeyInfo'
+
     Device:
       type: object
       description: Definition of uCentral device
@@ -107,12 +139,19 @@ components:
           type: string
           minLength: 2
           maxLength: 2
-        FCC:
+        restrictedDevice:
           type: boolean
           default: false
         certificateExpiryDate:
           type: integer
           format: int64
+        pendingConfiguration:
+          type: string
+        pendingConfigurationCmd:
+          type: string
+          format: uuid
+        restrictionDetails:
+          $ref: '#/components/schemas/DeviceRestrictions'
 
     DeviceWithStatus:
       type: object
@@ -214,6 +253,13 @@ components:
         certificateDate:
           type: integer
           format: int64
+        pendingConfiguration:
+          type: string
+        pendingConfigurationCmd:
+          type: string
+          format: uuid
+        restrictionDetails:
+          $ref: '#/components/schemas/DeviceRestrictions'
 
     DeviceList:
       type: object
@@ -517,6 +563,7 @@ components:
             - diagnostic
         script:
           type: string
+          description: This is the content of the script and must be encoded with base64. This is only for a ScriptRequest
         scriptId:
           type: string
         when:
@@ -991,15 +1038,8 @@ components:
         properties:
           parameterName:
             type: string
-          parameterType:
-            type: string
-            enum:
-              - string
-              - integer
-              - boolean
-              - path
           parameterValue:
-            {}
+            type: string
 
     #########################################################################################
     ##
@@ -1298,6 +1338,27 @@ paths:
           schema:
             type: boolean
             default: false
+          required: false
+        - in: query
+          description: return devices with their health value in between lowLimit and highLimit
+          name: health
+          schema:
+            type: boolean
+            default: false
+          required: false
+        - in: query
+          description: lowLimit for the health selection criteria
+          name: lowLimit
+          schema:
+            type: integer
+            default: 30
+          required: false
+        - in: query
+          description: highLimit for the health selection criteria
+          name: highLimits
+          schema:
+            type: integer
+            default: 70
           required: false
       responses:
         200:
@@ -2209,7 +2270,7 @@ paths:
         404:
           $ref: '#/components/responses/NotFound'
 
-  /device/{serialNumber}/script:
+  /device/{serialNumber}/:
     post:
       tags:
         - Commands
@@ -2974,9 +3035,25 @@ paths:
         - SystemConfiguration
       summary: Retrieve system configuration items
       operationId: getSystemConfiguration
+      parameters:
+        - in: query
+          description: Which parameters you want to retrieve
+          name: entries
+          schema:
+            type: string
+            example:
+              - element1
+              - element1,element2,element3
+          required: false
       responses:
         200:
-          $ref: '#/components/schemas/ExtraSystemConfiguration'
+          description: List of configuration elements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExtraSystemConfiguration'
         403:
           $ref: '#/components/responses/Unauthorized'
         404:

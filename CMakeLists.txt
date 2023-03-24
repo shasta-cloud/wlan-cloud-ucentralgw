@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(owgw VERSION 2.8.0)
+project(owgw VERSION 2.9.0)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -55,7 +55,7 @@ find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(fmt  REQUIRED)
 find_package(nlohmann_json  REQUIRED)
-find_package(nlohmann_json_schema_validator REQUIRED)
+# find_package(valijson       REQUIRED)
 
 if(SMALL_BUILD)
     find_package(Poco REQUIRED COMPONENTS Crypto JWT Net Util NetSSL Data DataSQLite)
@@ -165,10 +165,6 @@ add_executable( owgw
         src/CapabilitiesCache.h src/FindCountry.h
         src/rttys/RTTYS_server.cpp
         src/rttys/RTTYS_server.h
-        src/rttys/RTTYS_device.cpp
-        src/rttys/RTTYS_device.h
-        src/rttys/RTTYS_ClientConnection.cpp
-        src/rttys/RTTYS_ClientConnection.h
         src/rttys/RTTYS_WebServer.cpp
         src/rttys/RTTYS_WebServer.h src/RESTAPI/RESTAPI_device_helper.h
         src/SDKcalls.cpp
@@ -199,7 +195,7 @@ add_executable( owgw
         src/AP_WS_Process_telemetry.cpp
         src/AP_WS_Process_venuebroadcast.cpp
         src/RADSEC_server.h
-	src/UI_GW_WebSocketNotifications.cpp src/UI_GW_WebSocketNotifications.h src/framework/RESTAPI_SystemConfiguration.h src/ScriptManager.cpp src/ScriptManager.h src/RESTAPI/RESTAPI_scripts_handler.cpp src/RESTAPI/RESTAPI_scripts_handler.h src/RESTAPI/RESTAPI_script_handler.cpp src/RESTAPI/RESTAPI_script_handler.h src/storage/storage_scripts.cpp src/storage/storage_scripts.h src/SignatureMgr.cpp src/SignatureMgr.h src/AP_WS_Process_event.cpp src/AP_WS_Process_wifiscan.cpp src/AP_WS_Process_alarm.cpp)
+        src/UI_GW_WebSocketNotifications.cpp src/UI_GW_WebSocketNotifications.h src/framework/RESTAPI_SystemConfiguration.h src/ScriptManager.cpp src/ScriptManager.h src/RESTAPI/RESTAPI_scripts_handler.cpp src/RESTAPI/RESTAPI_scripts_handler.h src/RESTAPI/RESTAPI_script_handler.cpp src/RESTAPI/RESTAPI_script_handler.h src/storage/storage_scripts.cpp src/storage/storage_scripts.h src/SignatureMgr.h src/AP_WS_Process_event.cpp src/AP_WS_Process_wifiscan.cpp src/AP_WS_Process_alarm.cpp src/GWKafkaEvents.cpp src/GWKafkaEvents.h src/RegulatoryInfo.cpp src/RegulatoryInfo.h src/RESTAPI/RESTAPI_regulatory.cpp src/RESTAPI/RESTAPI_regulatory.h)
 
 if(NOT SMALL_BUILD)
 
@@ -217,7 +213,6 @@ if(NOT SMALL_BUILD)
     target_link_libraries(owgw PUBLIC
             ${MySQL_LIBRARIES} ${ZLIB_LIBRARIES}
                 CppKafka::cppkafka
-                nlohmann_json_schema_validator
                 fmt::fmt
              )
     if(UNIX AND NOT APPLE)

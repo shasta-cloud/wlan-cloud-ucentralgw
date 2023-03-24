@@ -8,43 +8,43 @@
 
 #include "RESTAPI_command.h"
 
+#include "CommandManager.h"
 #include "StorageService.h"
 #include "framework/ow_constants.h"
 
 namespace OpenWifi {
 	void RESTAPI_command::DoGet() {
 		auto CommandUUID = GetBinding(RESTAPI::Protocol::COMMANDUUID, "");
-		if(!Utils::ValidUUID(CommandUUID)) {
+		if (!Utils::ValidUUID(CommandUUID)) {
 			return NotFound();
 		}
 
 		GWObjects::CommandDetails Command;
 		if (StorageService()->GetCommand(CommandUUID, Command)) {
-			Poco::JSON::Object RetObj;
-			Command.to_json(RetObj);
-			return ReturnObject(RetObj);
+			return Object(Command);
 		}
 		return NotFound();
 	}
 
 	void RESTAPI_command::DoDelete() {
 		auto CommandUUID = GetBinding(RESTAPI::Protocol::COMMANDUUID, "");
-		if(CommandUUID.empty()) {
+		if (CommandUUID.empty()) {
 			return BadRequest(RESTAPI::Errors::MissingUUID);
 		}
 
-		if(!Utils::ValidUUID(CommandUUID)) {
+		if (!Utils::ValidUUID(CommandUUID)) {
 			return NotFound();
 		}
 
-		GWObjects::CommandDetails	C;
-		if(!StorageService()->GetCommand(CommandUUID, C)) {
+		GWObjects::CommandDetails C;
+		if (!StorageService()->GetCommand(CommandUUID, C)) {
 			return NotFound();
 		}
 
+		CommandManager()->RemoveCommand(CommandUUID);
 		if (StorageService()->DeleteCommand(CommandUUID)) {
 			return OK();
 		}
 		return InternalError(RESTAPI::Errors::NoRecordsDeleted);
 	}
-}
+} // namespace OpenWifi

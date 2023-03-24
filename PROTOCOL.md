@@ -92,20 +92,32 @@ Device sends a log message whenever necessary. The controller will log this mess
 #### Events Channel
 Device sends unsolicited events to the controller.
 ```json
-{   "jsonrpc" : "2.0" ,
-    "method" : "event" ,
+{   "jsonrpc" : "2.0" , 
+    "method" : "event" , 
     "params" : {
-        "serial" : <serial number> ,
-        "data" : <Optiona/may be empty: JSON Document providing additional information related to this event message>
+        "serial" : "001122334455" ,
+        "data" : { 
+          "event" : [
+            1871263817263,
+            {
+              "type" : "the event type",
+              "payload" : {
+                "field1" : "value1"
+              }
+            }
+          ]
+        }
     }
 }
 ```
 
+The first element of the `event` array is always the `timestamp` of the event. The `payload` is a JSON document contains addition information about the event. This _may not_ be empty.
+
 #### Alarms Channel
 Device sends unsolicited alarms to the controller.
 ```json
-{   "jsonrpc" : "2.0" ,
-    "method" : "alarm" ,
+{   "jsonrpc" : "2.0" , 
+    "method" : "alarm" , 
     "params" : {
         "serial" : <serial number> ,
         "data" : <Optiona/may be empty: JSON Document providing additional information related to this event message>
@@ -116,8 +128,8 @@ Device sends unsolicited alarms to the controller.
 #### Wifiscan Channel
 Device sends unsolicited wifiscans to the controller.
 ```json
-{   "jsonrpc" : "2.0" ,
-    "method" : "wifiscan" ,
+{   "jsonrpc" : "2.0" , 
+    "method" : "wifiscan" , 
     "params" : {
         "serial" : <serial number> ,
         "data" : <Optiona/may be empty: JSON Document providing additional information related to this wifiscan message>
@@ -229,7 +241,7 @@ venue where this device belongs and resend the same message to all other devices
     "params" : {
         "serial" : <serial number> ,
         "timestamp" : <the UTC timestamp when the message was sent>,
-        "data" : <an opaque string from the AP. This could be Zipped and so on and most likely base64 encoded>
+        "data" : <JSON document to broadcast>
     }
 }
 ```

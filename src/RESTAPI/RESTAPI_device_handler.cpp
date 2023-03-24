@@ -21,20 +21,18 @@ namespace OpenWifi {
 	void RESTAPI_device_handler::DoGet() {
 		std::string SerialNumber = GetBinding(RESTAPI::Protocol::SERIALNUMBER, "");
 
-		if(!Utils::NormalizeMac(SerialNumber)) {
+		if (!Utils::NormalizeMac(SerialNumber)) {
 			return BadRequest(RESTAPI::Errors::MissingSerialNumber);
 		}
 
 		GWObjects::Device Device;
 		if (StorageService()->GetDevice(SerialNumber, Device)) {
-			Poco::JSON::Object	Answer;
-			if(GetBoolParameter("completeInfo",false)) {
+			Poco::JSON::Object Answer;
+			if (GetBoolParameter("completeInfo", false)) {
 				CompleteDeviceInfo(Device, Answer);
 				return ReturnObject(Answer);
 			} else {
-				Poco::JSON::Object Obj;
-				Device.to_json(Obj);
-				return ReturnObject(Obj);
+				return Object(Device);
 			}
 		}
 		NotFound();
@@ -43,34 +41,34 @@ namespace OpenWifi {
 	void RESTAPI_device_handler::DoDelete() {
 		std::string SerialNumber = GetBinding(RESTAPI::Protocol::SERIALNUMBER, "");
 
-		if(!Utils::NormalizeMac(SerialNumber)) {
+		if (!Utils::NormalizeMac(SerialNumber)) {
 			return BadRequest(RESTAPI::Errors::MissingSerialNumber);
 		}
 
 		std::string Arg;
-		if(HasParameter("oui",Arg) && Arg=="true" && SerialNumber.size()==6) {
+		if (HasParameter("oui", Arg) && Arg == "true" && SerialNumber.size() == 6) {
 
-			std::set<std::string>	Set;
-			std::vector<GWObjects::Device>	Devices;
+			std::set<std::string> Set;
+			std::vector<GWObjects::Device> Devices;
 
 			bool Done = false;
-			uint64_t Offset=1;
-			while(!Done) {
+			uint64_t Offset = 1;
+			while (!Done) {
 
-				StorageService()->GetDevices(Offset,500,Devices);
-				for(const auto &i:Devices) {
-					if(i.SerialNumber.substr(0,6) == SerialNumber) {
+				StorageService()->GetDevices(Offset, 500, Devices);
+				for (const auto &i : Devices) {
+					if (i.SerialNumber.substr(0, 6) == SerialNumber) {
 						Set.insert(i.SerialNumber);
 					}
 				}
 
-				if(Devices.size()<500)
-					Done=true;
+				if (Devices.size() < 500)
+					Done = true;
 
 				Offset += Devices.size();
 			}
 
-			for(auto &i:Set) {
+			for (auto &i : Set) {
 				std::string SNum{i};
 				StorageService()->DeleteDevice(SNum);
 			}
@@ -87,23 +85,24 @@ namespace OpenWifi {
 	void RESTAPI_device_handler::DoPost() {
 
 		std::string SerialNumber = GetBinding(RESTAPI::Protocol::SERIALNUMBER, "");
-		if(!Utils::NormalizeMac(SerialNumber)) {
+		if (!Utils::NormalizeMac(SerialNumber)) {
 			return BadRequest(RESTAPI::Errors::MissingSerialNumber);
 		}
 
 		const auto &Obj = ParsedBody_;
 		std::string Arg;
-		if(HasParameter("validateOnly",Arg) && Arg=="true") {
-			if(!Obj->has("configuration")) {
+		if (HasParameter("validateOnly", Arg) && Arg == "true") {
+			if (!Obj->has("configuration")) {
 				return BadRequest(RESTAPI::Errors::MustHaveConfigElement);
 			}
-			auto Config=Obj->get("configuration").toString();
-			Poco::JSON::Object  Answer;
-			std::string 		Error;
-			auto Res = ValidateUCentralConfiguration(Config, Error);
-			Answer.set("valid",Res);
-			if(!Error.empty())
-				Answer.set("error",Error);
+			auto Config = Obj->get("configuration").toString();
+			Poco::JSON::Object Answer;
+			std::vector<std::string> Error;
+			auto Res =
+				ValidateUCentralConfiguration(Config, Error, GetBoolParameter("strict", false));
+			Answer.set("valid", Res);
+			if (!Error.empty())
+				Answer.set("error", Error);
 			return ReturnObject(Answer);
 		}
 
@@ -112,20 +111,23 @@ namespace OpenWifi {
 			return BadRequest(RESTAPI::Errors::InvalidJSONDocument);
 		}
 
-		if(!Utils::NormalizeMac(Device.SerialNumber)) {
-			return BadRequest( RESTAPI::Errors::InvalidSerialNumber);
+		if (!Utils::NormalizeMac(Device.SerialNumber)) {
+			return BadRequest(RESTAPI::Errors::InvalidSerialNumber);
 		}
 
-		if(SerialNumber!=Device.SerialNumber) {
+		if (SerialNumber != Device.SerialNumber) {
 			return BadRequest(RESTAPI::Errors::SerialNumberMismatch);
 		}
 
-		std::string Error;
-		if(Device.Configuration.empty() || (!Device.Configuration.empty() && !ValidateUCentralConfiguration(Device.Configuration,Error))) {
+		std::vector<std::string> Error;
+		if (Device.Configuration.empty() ||
+			(!Device.Configuration.empty() &&
+			 !ValidateUCentralConfiguration(Device.Configuration, Error,
+											GetBoolParameter("strict", false)))) {
 			return BadRequest(RESTAPI::Errors::ConfigBlockInvalid);
 		}
 
-		for(auto &i:Device.Notes) {
+		for (auto &i : Device.Notes) {
 			i.createdBy = UserInfo_.userinfo.email;
 			i.created = Utils::Now();
 		}
@@ -139,9 +141,7 @@ namespace OpenWifi {
 
 		if (StorageService()->CreateDevice(Device)) {
 			SetCurrentConfigurationID(SerialNumber, Device.UUID);
-			Poco::JSON::Object DevObj;
-			Device.to_json(DevObj);
-			return ReturnObject(DevObj);
+			return Object(Device);
 		}
 		InternalError(RESTAPI::Errors::RecordNotCreated);
 	}
@@ -149,7 +149,7 @@ namespace OpenWifi {
 	void RESTAPI_device_handler::DoPut() {
 		std::string SerialNumber = GetBinding(RESTAPI::Protocol::SERIALNUMBER, "");
 
-		if(!Utils::ValidSerialNumber(SerialNumber)) {
+		if (!Utils::ValidSerialNumber(SerialNumber)) {
 			return BadRequest(RESTAPI::Errors::MissingSerialNumber);
 		}
 
@@ -159,14 +159,15 @@ namespace OpenWifi {
 			return BadRequest(RESTAPI::Errors::InvalidJSONDocument);
 		}
 
-		GWObjects::Device	Existing;
-		if(!StorageService()->GetDevice(SerialNumber, Existing)) {
+		GWObjects::Device Existing;
+		if (!StorageService()->GetDevice(SerialNumber, Existing)) {
 			return NotFound();
 		}
 
-		if(!NewDevice.Configuration.empty()) {
-			std::string Error;
-			if (!ValidateUCentralConfiguration(NewDevice.Configuration, Error)) {
+		if (!NewDevice.Configuration.empty()) {
+			std::vector<std::string> Error;
+			if (!ValidateUCentralConfiguration(NewDevice.Configuration, Error,
+											   GetBoolParameter("strict", false))) {
 				return BadRequest(RESTAPI::Errors::ConfigBlockInvalid);
 			}
 			Config::Config NewConfig(NewDevice.Configuration);
@@ -182,7 +183,7 @@ namespace OpenWifi {
 		AssignIfPresent(Obj, "subscriber", Existing.subscriber);
 		AssignIfPresent(Obj, "entity", Existing.entity);
 
-		for(auto &i:NewDevice.Notes) {
+		for (auto &i : NewDevice.Notes) {
 			i.createdBy = UserInfo_.userinfo.email;
 			i.created = Utils::Now();
 			Existing.Notes.push_back(i);
@@ -191,10 +192,10 @@ namespace OpenWifi {
 		Existing.LastConfigurationChange = Utils::Now();
 		if (StorageService()->UpdateDevice(Existing)) {
 			SetCurrentConfigurationID(SerialNumber, Existing.UUID);
-			Poco::JSON::Object DevObj;
-			NewDevice.to_json(DevObj);
-			return ReturnObject(DevObj);
+			GWObjects::Device UpdatedDevice;
+			StorageService()->GetDevice(SerialNumber, UpdatedDevice);
+			return Object(UpdatedDevice);
 		}
 		InternalError(RESTAPI::Errors::RecordNotUpdated);
 	}
-}
+} // namespace OpenWifi
