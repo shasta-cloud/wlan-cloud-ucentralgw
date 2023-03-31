@@ -7,6 +7,7 @@
 #include <chrono>
 #include "RESTAPI_RPC.h"
 
+#include "Daemon.h"
 #include "CommandManager.h"
 #include "AP_WS_Server.h"
 #include "StorageService.h"
@@ -90,6 +91,13 @@ namespace OpenWifi::RESTAPI_RPC {
 			}
 
 			auto ResultFields = rpc_answer->get(uCentralProtocol::RESULT).extract<Poco::JSON::Object::Ptr>();
+
+                        //Logic to print the received message as info Logs from AP.
+               		std::ostringstream      rpcss;
+               		ResultFields->stringify(rpcss);
+               		nlohmann::json D = nlohmann::json::parse(rpcss.str());
+               		Logger.information(fmt::format("Response Received from AP :{} ",rpcss.str() ));
+			
 			if (!ResultFields->has(uCentralProtocol::STATUS) || !ResultFields->isObject(uCentralProtocol::STATUS)) {
 				Cmd.executionTime = rpc_execution_time.count();
 				if(Cmd.Command=="ping") {
@@ -137,7 +145,16 @@ namespace OpenWifi::RESTAPI_RPC {
 			}
 
 			//	Add the completed command to the database...
-			StorageService()->AddCommand(Cmd.SerialNumber, Cmd, Storage::CommandExecutionType::COMMAND_COMPLETED);
+            GWObjects::Device       DeviceInfo;
+            StorageService()->GetDevice(Cmd.SerialNumber,DeviceInfo);
+            if ( (Daemon()->IdentifyDevice(DeviceInfo.DeviceType) == "SWITCH") &&
+                 (Cmd.Command ==  uCentralProtocol::UPGRADE) )
+            {
+                //In case of upgrade set to execution, once we get the event message for firmware update the command list
+                StorageService()->AddCommand(Cmd.SerialNumber, Cmd, Storage::CommandExecutionType::COMMAND_EXECUTED);
+            } else {
+                StorageService()->AddCommand(Cmd.SerialNumber, Cmd, Storage::CommandExecutionType::COMMAND_COMPLETED);
+            }
 
 			if (ObjectToReturn && Handler) {
 				Handler->ReturnObject(*ObjectToReturn);

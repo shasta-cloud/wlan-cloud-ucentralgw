@@ -15,7 +15,6 @@
 #include "Poco/Net/WebSocket.h"
 
 #include "RESTObjects/RESTAPI_GWobjects.h"
-#include "AP_restrictions.h"
 
 namespace OpenWifi {
 
@@ -48,8 +47,8 @@ namespace OpenWifi {
 		static bool ExtractBase64CompressedData(const std::string & CompressedData, std::string & UnCompressedData, uint64_t compress_sz);
 		void LogException(const Poco::Exception &E);
 		inline Poco::Logger & Logger() { return Logger_; }
-		bool SetWebSocketTelemetryReporting(uint64_t RPCID, uint64_t interval, uint64_t TelemetryWebSocketTimer);
-		bool SetKafkaTelemetryReporting(uint64_t RPCID, uint64_t interval, uint64_t TelemetryKafkaTimer);
+		bool SetWebSocketTelemetryReporting(uint64_t RPCID, uint64_t interval, uint64_t TelemetryWebSocketTimer, const std::vector<std::string> & TelemetryTypes);
+		bool SetKafkaTelemetryReporting(uint64_t RPCID, uint64_t interval, uint64_t TelemetryKafkaTimer, const std::vector<std::string> & TelemetryTypes);
 		bool StopWebSocketTelemetry(uint64_t RPCID);
 		bool StopKafkaTelemetry(uint64_t RPCID);
 
@@ -78,7 +77,7 @@ namespace OpenWifi {
 			State = State_;
 		}
 
-		inline void GetRestrictions(AP_Restrictions & R) const {
+		inline void GetRestrictions(GWObjects::DeviceRestrictions & R) const {
 			std::shared_lock	G(ConnectionMutex_);
 			R = Restrictions_;
 		}
@@ -94,6 +93,9 @@ namespace OpenWifi {
 		void Process_deviceupdate(Poco::JSON::Object::Ptr ParamsObj, std::string &Serial);
 		void Process_telemetry(Poco::JSON::Object::Ptr ParamsObj);
 		void Process_venuebroadcast(Poco::JSON::Object::Ptr ParamsObj);
+		void Process_event(Poco::JSON::Object::Ptr ParamsObj);
+		void Process_wifiscan(Poco::JSON::Object::Ptr ParamsObj);
+		void Process_alarm(Poco::JSON::Object::Ptr ParamsObj);
 
 		bool ValidatedDevice();
 
@@ -115,7 +117,7 @@ namespace OpenWifi {
 
 		friend class AP_WS_Server;
 
-        inline AP_Restrictions Restrictions() const {
+        inline GWObjects::DeviceRestrictions Restrictions() const {
 			std::shared_lock	G(ConnectionMutex_);
 			return Restrictions_;
 		}
@@ -150,11 +152,11 @@ namespace OpenWifi {
 		std::atomic_flag 					Dead_=false;
 		std::atomic_bool 					DeviceValidated_=false;
 		std::atomic_bool 					Valid_=false;
-        AP_Restrictions                     Restrictions_;
+        OpenWifi::GWObjects::DeviceRestrictions       Restrictions_;
 
 		static inline std::atomic_uint64_t 	ConcurrentStartingDevices_=0;
 
-		bool StartTelemetry(uint64_t RPCID);
+		bool StartTelemetry(uint64_t RPCID, const std::vector<std::string> & TelemetryTypes);
 		bool StopTelemetry(uint64_t RPCID);
 		void UpdateCounts();
 	};

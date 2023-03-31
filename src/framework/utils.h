@@ -11,6 +11,7 @@
 #include <random>
 #include <regex>
 #include <thread>
+#include <shared_mutex>
 
 #include "Poco/Thread.h"
 #include "Poco/StringTokenizer.h"
@@ -72,6 +73,7 @@ namespace OpenWifi::Utils {
 
 	[[nodiscard]] bool ValidSerialNumber(const std::string &Serial);
 	[[nodiscard]] bool ValidUUID(const std::string &UUID);
+	[[nodiscard]] bool ValidHostname(const std::string &hostname);
 
 	template <typename ...Args> std::string ComputeHash(Args&&... args) {
 		Poco::SHA2Engine    E;
@@ -119,6 +121,7 @@ namespace OpenWifi::Utils {
 	[[nodiscard]] bool IsAlphaNumeric(const std::string &s);
     [[nodiscard]] std::string SanitizeToken(const std::string &Token);
 	[[nodiscard]] bool ValidateURI(const std::string &uri);
+	[[nodiscard]] std::uint64_t ConvertDate(const std::string &d);
 
 	template< typename T >
 	std::string int_to_hex( T i )
@@ -128,6 +131,23 @@ namespace OpenWifi::Utils {
 			   << std::hex << i;
 		return stream.str();
 	}
+
+	inline bool SpinLock_Read(std::shared_mutex &M, volatile bool &Flag, uint64_t wait_ms=100) {
+		while(!M.try_lock_shared() && Flag) {
+			Poco::Thread::yield();
+			Poco::Thread::trySleep((long)wait_ms);
+		}
+		return Flag;
+	}
+
+	inline bool SpinLock_Write(std::shared_mutex &M, volatile bool &Flag, uint64_t wait_ms=100) {
+		while(!M.try_lock() && Flag) {
+			Poco::Thread::yield();
+			Poco::Thread::trySleep(wait_ms);
+		}
+		return Flag;
+	}
+
 	bool ExtractBase64CompressedData(const std::string &CompressedData,
 											std::string &UnCompressedData, uint64_t compress_sz );
 }
