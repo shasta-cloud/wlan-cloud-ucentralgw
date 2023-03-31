@@ -296,7 +296,7 @@ namespace OpenWifi {
 		return false;
 	}
 
-	bool AP_WS_Server::Connected(uint64_t SerialNumber, AP_Restrictions & Restrictions) const {
+	bool AP_WS_Server::Connected(uint64_t SerialNumber, GWObjects::DeviceRestrictions & Restrictions) const {
 		std::shared_ptr<AP_WS_Connection>	DevicePtr;
 		{
 			std::lock_guard Lock(WSServerMutex_);
@@ -355,7 +355,7 @@ namespace OpenWifi {
 		DevicePtr->StopWebSocketTelemetry(RPCID);
 	}
 
-	void AP_WS_Server::SetWebSocketTelemetryReporting(uint64_t RPCID, uint64_t SerialNumber, uint64_t Interval, uint64_t Lifetime) {
+	void AP_WS_Server::SetWebSocketTelemetryReporting(uint64_t RPCID, uint64_t SerialNumber, uint64_t Interval, uint64_t Lifetime, const std::vector<std::string> & TelemetryTypes) {
 		std::shared_ptr<AP_WS_Connection>	DevicePtr;
 		{
 			std::lock_guard Lock(WSServerMutex_);
@@ -365,10 +365,10 @@ namespace OpenWifi {
 			}
 			DevicePtr = Device->second.second;
 		}
-		DevicePtr->SetWebSocketTelemetryReporting(RPCID, Interval, Lifetime);
+		DevicePtr->SetWebSocketTelemetryReporting(RPCID, Interval, Lifetime, TelemetryTypes);
 	}
 
-	void AP_WS_Server::SetKafkaTelemetryReporting(uint64_t RPCID, uint64_t SerialNumber, uint64_t Interval, uint64_t Lifetime) {
+	void AP_WS_Server::SetKafkaTelemetryReporting(uint64_t RPCID, uint64_t SerialNumber, uint64_t Interval, uint64_t Lifetime, const std::vector<std::string> & TelemetryTypes) {
 		std::shared_ptr<AP_WS_Connection>	DevicePtr;
 		{
 			std::lock_guard Lock(WSServerMutex_);
@@ -378,7 +378,7 @@ namespace OpenWifi {
 			}
 			DevicePtr = Device->second.second;
 		}
-		DevicePtr->SetKafkaTelemetryReporting(RPCID, Interval, Lifetime);
+		DevicePtr->SetKafkaTelemetryReporting(RPCID, Interval, Lifetime, TelemetryTypes);
 	}
 
 	void AP_WS_Server::StopKafkaTelemetry(uint64_t RPCID, uint64_t SerialNumber) {

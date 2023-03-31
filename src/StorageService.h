@@ -158,6 +158,7 @@ namespace OpenWifi {
 		bool GetNewestCommands(std::string &SerialNumber, uint64_t HowMany, std::vector<GWObjects::CommandDetails> & Commands);
 		bool SetCommandExecuted(std::string & CommandUUID);
 		bool SetCommandTimedOut(std::string &CommandUUID);
+        bool UpdateLastCommandStatus(GWObjects::CommandDetails &Command, GWObjects::CommandDetails &RCommand);
 
 		void RemovedExpiredCommands();
 		void RemoveTimedOutCommands();
