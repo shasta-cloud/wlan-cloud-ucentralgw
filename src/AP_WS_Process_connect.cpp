@@ -18,6 +18,21 @@
 
 namespace OpenWifi {
 
+               static void SendKafkaFirmwareUpdate(const std::string &SerialNumber, const std::string &OldFirmware, const std::string &NewFirmware) {
+               if(KafkaManager()->Enabled()) {
+                       Poco::JSON::Object EventDetails;
+                       EventDetails.set("oldFirmware", OldFirmware);
+                       EventDetails.set("newFirmware",NewFirmware);
+                       Poco::JSON::Object      Event;
+                       Event.set("type","device.firmware_change");
+                       Event.set("timestamp", Utils::Now());
+                       Event.set("details", EventDetails);
+                       std::ostringstream OS;
+                       Event.stringify(OS);
+                       KafkaManager()->PostMessage(KafkaTopics::CONNECTION, SerialNumber, OS.str());
+               }
+       }
+
 	void AP_WS_Connection::Process_connect(Poco::JSON::Object::Ptr ParamsObj, const std::string &Serial) {
 		if (ParamsObj->has(uCentralProtocol::UUID) &&
 			ParamsObj->has(uCentralProtocol::FIRMWARE) &&
@@ -50,12 +65,10 @@ namespace OpenWifi {
 			}
 
 			bool RestrictedDevice = false;
-			if(ParamsObj->has("restricted") && ParamsObj->get("restricted").isBoolean()) {
+			if(Capabilities->has("restrictions")){
                 RestrictedDevice = true;
-                if(Capabilities->has("restrictions")) {
-                    auto RestrictionObject = Capabilities->getObject("restrictions");
-                    Restrictions_.initialize(Logger_, SerialNumber_, RestrictionObject);
-                }
+				Poco::JSON::Object::Ptr RestrictionObject = Capabilities->getObject("restrictions");
+				Restrictions_.from_json(RestrictionObject);
 			}
 
 			State_.locale = FindCountryFromIP()->Get(IP);
@@ -68,6 +81,7 @@ namespace OpenWifi {
 				int Updated{0};
 				if(!Firmware.empty()) {
 					if(Firmware!=DeviceInfo.Firmware) {
+                                                SendKafkaFirmwareUpdate(SerialNumber_, DeviceInfo.Firmware, Firmware);
 						DeviceInfo.Firmware = Firmware;
 						DeviceInfo.LastFWUpdate = Utils::Now();
 						++Updated;
@@ -97,9 +111,15 @@ namespace OpenWifi {
                     ++Updated;
 				}
 
+				if(Restrictions_ != DeviceInfo.restrictionDetails) {
+					DeviceInfo.restrictionDetails = Restrictions_;
+					++Updated;
+				}
+
 				if(Updated) {
 					StorageService()->UpdateDevice(DeviceInfo);
 				}
+
 				uint64_t UpgradedUUID=0;
 				LookForUpgrade(UUID,UpgradedUUID);
 				State_.UUID = UpgradedUUID;
@@ -111,7 +131,7 @@ namespace OpenWifi {
 			State_.connectionCompletionTime = ConnectionCompletionTime_.count();
 
 			if(State_.VerifiedCertificate == GWObjects::VALID_CERTIFICATE) {
-				if ((	Utils::SerialNumberMatch(CN_, SerialNumber_, AP_WS_Server()->MismatchDepth())) ||
+				if ((	Utils::SerialNumberMatch(CN_, SerialNumber_, (int)AP_WS_Server()->MismatchDepth())) ||
 						AP_WS_Server()->IsSimSerialNumber(CN_)) {
 					State_.VerifiedCertificate = GWObjects::VERIFIED;
 					poco_information(Logger_, fmt::format("CONNECT({}): Fully validated and authenticated device. Session={} ConnectionCompletion Time={}",
@@ -127,9 +147,8 @@ namespace OpenWifi {
 												 State_.connectionCompletionTime));
 					} else {
 						poco_information(
-							Logger_, fmt::format("CONNECT({}): Serial number mismatch disallowed. Device rejected. CN={} Serial={} Session={} ConnectionCompletion Time={}",
-												 CId_, CN_, SerialNumber_, State_.sessionId,
-												 State_.connectionCompletionTime));
+							Logger_, fmt::format("CONNECT({}): Serial number mismatch disallowed. Device rejected. CN={} Serial={} Session={}",
+												 CId_, CN_, SerialNumber_, State_.sessionId));
 						return EndConnection();
 					}
 				}
