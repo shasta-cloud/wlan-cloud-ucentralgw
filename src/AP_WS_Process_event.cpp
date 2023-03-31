@@ -36,18 +36,20 @@ namespace OpenWifi {
                         EventDetails = Event->getObject(0);
                     }
                     auto EventType = EventDetails->get("type").extract<std::string>();
-                    auto EventPayload = EventDetails->getObject("payload");
-                    auto GetUpgradeType = EventPayload->get("operation").extract<std::string>();
-                    std::string GetUpgradeTypePercentage;
-                    std::string UpdateStatus;
-                    if (GetUpgradeType == "download") {
-                        GetUpgradeTypePercentage = EventPayload->get("percentage").toString();
-                        UpdateStatus = GetUpgradeType + "_" + GetUpgradeTypePercentage + "%";
-                    } else {
-                        UpdateStatus = GetUpgradeType;
-                    }
 
                     if (EventType == "firmware_upgrade_status") {
+
+                        auto EventPayload = EventDetails->getObject("payload");
+                        auto GetUpgradeType = EventPayload->get("operation").extract<std::string>();
+                        std::string GetUpgradeTypePercentage;
+                        std::string UpdateStatus;
+                        if (GetUpgradeType == "download") {
+                            GetUpgradeTypePercentage = EventPayload->get("percentage").toString();
+                            UpdateStatus = GetUpgradeType + "_" + GetUpgradeTypePercentage + "%";
+                        } else {
+                            UpdateStatus = GetUpgradeType;
+                        }
+
                         GWObjects::Device       DeviceInfo;
                         StorageService()->GetDevice(SerialNumber_, DeviceInfo);
 
